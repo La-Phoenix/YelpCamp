@@ -3,7 +3,7 @@ const { cloudinary } = require('../cloudinary');
 const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
 const mapBoxToken = process.env.MAPBOX_TOKEN;
 const geocoder = mbxGeocoding({ accessToken: mapBoxToken });
-
+const ExpressError = require('../utils/ExpressError')
 
 module.exports.index = async (req, res) => {
     const campgrounds = await Campground.find({});
@@ -27,8 +27,9 @@ module.exports.createForm = async (req, res, next) => {
     req.flash('success', 'Successfully, created a new campground!');
     res.redirect(`campgrounds/${campground._id}`)
 }
-module.exports.showCampground = async (req, res) => {
-    const campground = await Campground.findById(req.params.id).populate({
+module.exports.showCampground = async (req, res, next) => {
+    try {
+        const campground = await Campground.findById(req.params.id).populate({
         path: 'reviews',
         populate: {
             path: 'author'
@@ -40,6 +41,9 @@ module.exports.showCampground = async (req, res) => {
         return res.redirect('/campgrounds')
     }
     res.render('campgrounds/show', {campground})
+    } catch (e) {
+        next(new ExpressError('Unable to find campground' , 404))
+    }
 }
 module.exports.renderEditCampground = async (req, res) => {
     const { id } = req.params;
