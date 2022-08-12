@@ -25,11 +25,13 @@ const campgroundRoutes = require('./Routes/campground');
 const reviewsRoutes = require('./Routes/review');
 const usersRoutes = require('./Routes/user');
 const mongoSanitize = require('express-mongo-sanitize');
-const MongoStore = require('connect-mongo')
+const MongoStore = require('connect-mongo');
+const errorHandlerMiddleware = require('./middleware')
 
 
 const secret = process.env.SECRET || 'BadSecret';
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+
 
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
@@ -53,7 +55,7 @@ app.set('views', path.join(__dirname, 'views'))
 
 const store = MongoStore.create({
     mongoUrl: dbUrl,
-    secret: 'thisshouldbeabettersecret',
+    secret,
     touchAfter: 24 * 60 * 60
 });
 
@@ -179,6 +181,9 @@ app.use((err, req, res, next) => {
     if (!err.message) err.message = 'Oh No, Something Went Wrong!'
     res.status(statusCode).render('error', { err })
 })
+
+
+
 
 
 const port = process.env.PORT || 3000
