@@ -7,7 +7,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <% if (campground.images.length){ %> 
-                        <a href="/campgrounds/<%= campground._id %> "><img src="<%= campground.images[0].url %>" alt="" class="img-fluid"></a>
+                        <a href="/campgrounds/<%= campground._id %> "><img src="<%= campground.images[0].thumbnail %>" alt="" class="img-fluid"></a>
                     <% } else{ %> 
                         <a href="/campgrounds/<%= campground._id %> "><img src="https://res.cloudinary.com/dqj6iiyau/image/upload/v1659370832/YelpCamp/zfyusauxyrhtewbgkzhi.jpg" alt="" class="img-fluid"></a>
                     <% } %> 
