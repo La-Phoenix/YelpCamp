@@ -60,6 +60,11 @@ module.exports.updateCampground = async (req, res) => {
     const campground = await Campground.findOneAndUpdate(id, { ...req.body.campground });
     const imgs = req.files.map(f => ({ url: f.path, filename: f.filename }));
     campground.images.push(...imgs); 
+    const geoData = await geocoder.forwardGeocode({
+        query: req.body.campground.location,
+        limit: 1
+    }).send();
+    campground.geometry = geoData.body.features[0].geometry;
     await campground.save();
     if (req.body.deleteImages) {
         for (let filename of req.body.deleteImages) {

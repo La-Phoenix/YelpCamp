@@ -7,3 +7,9 @@
     width: 100%;
     height: 300px;
 }
+
+.btn-new{
+    background-color: grey;
+    border-color:beige;
+}
+
