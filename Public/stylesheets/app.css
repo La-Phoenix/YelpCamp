@@ -5,6 +5,19 @@ body {
 .card {
   background-color: #1a1b21;
 }
+.camp-list1 {
+  background-color: #1a1b21;
+}
+.camp-list2 {
+  background-color: #1a1b21;
+}
+.camp-list3 {
+  background-color: #1a1b21;
+}
+.new-campground {
+  background-color: #1a1b21;
+  border-radius: 10px 10px 10px 10px;
+}
 
 #cluster-map {
   width: 100%;
@@ -19,6 +32,10 @@ body {
 .btn-new {
   background-color: grey;
   border-color: beige;
+}
+.button-new {
+  display: flex;
+  justify-content: space-between;
 }
 
 .copyright {
