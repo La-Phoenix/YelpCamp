@@ -65,13 +65,16 @@ module.exports.updateCampground = async (req, res) => {
         limit: 1
     }).send();
     campground.geometry = geoData.body.features[0].geometry;
-    await campground.save();
+    
     if (req.body.deleteImages) {
         for (let filename of req.body.deleteImages) {
             await cloudinary.uploader.destroy(filename);
         }
         await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages } } } })
     }
+    await campground.save();
+    console.log(req.user)
+    console.log(req.session)
     req.flash('success', 'successfully updated campground!')
     res.redirect(`/campgrounds/${campground._id}`)
 }

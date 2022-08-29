@@ -29,9 +29,9 @@ const MongoStore = require('connect-mongo');
 const errorHandlerMiddleware = require('./middleware')
 
 
-const secret = process.env.SECRET || 'BadSecret';
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
-
+const secret = process.env.SECRET;
+const dbUrl = process.env.DB_URL 
+// || 'mongodb://localhost:27017/yelp-camp';
 
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
@@ -86,6 +86,8 @@ app.use(flash());
 app.use(mongoSanitize());
 app.use(passport.initialize());
 app.use(passport.session());
+
+
 
 
 app.use(helmet.crossOriginEmbedderPolicy({ policy: "credentialless" }));
