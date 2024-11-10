@@ -1,39 +1,57 @@
 mapboxgl.accessToken = mapToken;
+
+const defaultCoordinates = [3.898652530270285, 7.444589663262745];  // Fallback to default coordinates if geolocation fails
+
+// Initialize map with default center
 const map = new mapboxgl.Map({
     container: 'cluster-map',
     style: 'mapbox://styles/mapbox/light-v10',
-    center: [-103.59179687498357, 40.66995747013945],
+    center: defaultCoordinates,
     zoom: 3
 });
 
 map.addControl(new mapboxgl.NavigationControl());
 
+// Attempt to get the user's exact location
+navigator.geolocation.getCurrentPosition(
+    (position) => {
+        const userCoordinates = [position.coords.longitude, position.coords.latitude];
 
+        // Update map center to the user's location
+        map.setCenter(userCoordinates);
+        map.setZoom(12);  // Adjust the zoom level based on your preference
+
+        // Optionally add a marker for the user's location
+        new mapboxgl.Marker()
+            .setLngLat(userCoordinates)
+            .setPopup(new mapboxgl.Popup().setHTML("<h3>Your Location</h3>"))
+            .addTo(map);
+    },
+    (error) => {
+        console.error("Error retrieving location:", error);
+        // If geolocation fails, map remains at the default coordinates
+    },
+    { enableHighAccuracy: true }
+);
+
+// Map load event
 map.on('load', function () {
-    // Add a new source from our GeoJSON data and
-    // set the 'cluster' option to true. GL-JS will
-    // add the point_count property to your source data.
+    // Add GeoJSON data source for campgrounds and clustering functionality
     map.addSource('campgrounds', {
         type: 'geojson',
-        // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
-        // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
         data: campgrounds,
         cluster: true,
-        clusterMaxZoom: 14, // Max zoom to cluster points on
-        clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+        clusterMaxZoom: 14,  // Max zoom level to cluster points
+        clusterRadius: 50    // Radius for clustering points
     });
 
+    // Add layer for clustered points (circles)
     map.addLayer({
         id: 'clusters',
         type: 'circle',
         source: 'campgrounds',
         filter: ['has', 'point_count'],
         paint: {
-            // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-            // with three steps to implement three types of circles:
-            //   * Blue, 20px circles when point count is less than 100
-            //   * Yellow, 30px circles when point count is between 100 and 750
-            //   * Pink, 40px circles when point count is greater than or equal to 750
             'circle-color': [
                 'step',
                 ['get', 'point_count'],
@@ -55,6 +73,7 @@ map.on('load', function () {
         }
     });
 
+    // Add layer for cluster count (number of points in each cluster)
     map.addLayer({
         id: 'cluster-count',
         type: 'symbol',
@@ -67,6 +86,7 @@ map.on('load', function () {
         }
     });
 
+    // Add layer for unclustered points
     map.addLayer({
         id: 'unclustered-point',
         type: 'circle',
@@ -80,36 +100,26 @@ map.on('load', function () {
         }
     });
 
-    // inspect a cluster on click
+    // Inspect a cluster on click (expand the cluster when clicked)
     map.on('click', 'clusters', function (e) {
-        const features = map.queryRenderedFeatures(e.point, {
-            layers: ['clusters']
-        });
+        const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
         const clusterId = features[0].properties.cluster_id;
-        map.getSource('campgrounds').getClusterExpansionZoom(
-            clusterId,
-            function (err, zoom) {
-                if (err) return;
+        map.getSource('campgrounds').getClusterExpansionZoom(clusterId, function (err, zoom) {
+            if (err) return;
 
-                map.easeTo({
-                    center: features[0].geometry.coordinates,
-                    zoom: zoom
-                });
-            }
-        );
+            map.easeTo({
+                center: features[0].geometry.coordinates,
+                zoom: zoom
+            });
+        });
     });
 
-    // When a click event occurs on a feature in
-    // the unclustered-point layer, open a popup at
-    // the location of the feature, with
-    // description HTML from its properties.
+    // Show popup when clicking on unclustered point
     map.on('click', 'unclustered-point', function (e) {
         const { popUpMarkup } = e.features[0].properties;
         const coordinates = e.features[0].geometry.coordinates.slice();
 
-        // Ensure that if the map is zoomed out such that
-        // multiple copies of the feature are visible, the
-        // popup appears over the copy being pointed to.
+        // Ensure the popup appears over the clicked feature
         while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
             coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
         }
@@ -120,9 +130,12 @@ map.on('load', function () {
             .addTo(map);
     });
 
+    // Change cursor to pointer when hovering over clusters
     map.on('mouseenter', 'clusters', function () {
         map.getCanvas().style.cursor = 'pointer';
     });
+
+    // Reset cursor when leaving the cluster
     map.on('mouseleave', 'clusters', function () {
         map.getCanvas().style.cursor = '';
     });
